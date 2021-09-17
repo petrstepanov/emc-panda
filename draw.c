@@ -1,7 +1,9 @@
 
 // Taken from this example: https://root.cern.ch/doc/master/classTGeoManager.html
 
-void drawNew(const char* filename="emc_module12_2018v1.root"){
+void draw(const char* filename="emc_module12_2018v1.root"){
+
+	gStyle->SetCanvasPreferGL(1);
 
 	TFile* f = new TFile(filename, "READ");
 	TGeoVolumeAssembly* assembly = (TGeoVolumeAssembly*)f->Get("BarrelEMC");
@@ -12,26 +14,41 @@ void drawNew(const char* filename="emc_module12_2018v1.root"){
 	TGeoMedium *vacuumMedium = new TGeoMedium("vacuumMedium", 1, vacuumMaterial);
 
 	// Create top world volume
-	// TGeoManager *geoManager = new TGeoManager("geoManager", "Simple geometry");
 	TGeoVolume *topVolume = gGeoManager->MakeBox("topVolume", vacuumMedium, 0, 0, 0);
 	topVolume->AddNode(assembly, 1);
-	// topVolume->SetVisibility(kFALSE);
 
+	gGeoManager->SetVisLevel(5);
 	gGeoManager->SetTopVolume(topVolume);
-	// geoManager->SetTopVolume(topVolume);
 	gGeoManager->CloseGeometry();
 
-	// Add child nodes
-	// std::cout << "Assembly contains " <<  barrelEMC->GetRefCount() << " daughters." << std::endl;
-	// for (int i = 0; i < barrelEMC->GetRefCount(); i++){
-	// 	TGeoNode* node = barrelEMC->GetNode(i);
-	// 	if (node->InheritsFrom(TGeoVolumeAssembly::Class())){
-	// 		TGeoVolumeAssembly* assembly = (TGeoVolumeAssembly*)node;
-	// 		assembly->Print();
+	TObjArray* nodesArray = assembly->GetNodes();
+
+	// Iterate child nodes
+	std::cout << "Assembly contains " <<  nodesArray->GetEntries() << " entries." << std::endl;
+	for (int i = 0; i < nodesArray->GetEntries(); i++){
+		TGeoNode* node = assembly->GetNode(i);
+		node->Print();
+	}
+
+	// Print certain node
+	// for (int i = 0; i < nodesArray->GetEntries(); i++){
+	// }
+
+	// Print one node
+	// TGeoNode* node = assembly->GetNode(15);
+	// if (node->InheritsFrom(TGeoNodeMatrix ::Class())){
+	// 	TGeoNodeMatrix* nodeMatrix = (TGeoNodeMatrix*)node;
+	// 	TGeoVolume* volume = nodeMatrix->GetVolume();
+	// 	if (volume->InheritsFrom(TGeoVolumeAssembly::Class())){
+	// 		TGeoVolumeAssembly* childAssembly = (TGeoVolumeAssembly*)volume;
+	// 		std::cout << "^^ Is volume assembly" << std::endl;
+	// 		// TString volumeName = TString::Format("myVolume%d", i);
+	// 		// TGeoVolume *myVolume = gGeoManager->MakeBox(volumeName.Data(), vacuumMedium, 0, 0, 0);
+	// 		topVolume->AddNode(childAssembly, 1);
 	// 	}
 	// }
 
-	gGeoManager->SetVisLevel(4);
 	// gStyle->SetCanvasPreferGL();
+	// topVolume->Draw("");
 	topVolume->Draw("ogl");
 }
