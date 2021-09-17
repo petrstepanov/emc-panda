@@ -1,5 +1,4 @@
-
-// Taken from this example: https://root.cern.ch/doc/master/classTGeoManager.html
+// Refer to this example: https://root.cern.ch/doc/master/classTGeoManager.html
 
 void draw(const char* filename="emc_module12_2018v1.root"){
 
