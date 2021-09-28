@@ -48,6 +48,9 @@ void draw(const char* filename="emc_module12_2018v1.root"){
 	// }
 
 	// gStyle->SetCanvasPreferGL();
-	// topVolume->Draw("");
-	topVolume->Draw("ogl");
+	topVolume->Draw("");
+	// topVolume->Draw("ogl");
+
+	// Retuyrn 
+	return 0;
 }
