@@ -1,9 +1,41 @@
+#include <TGFileDialog.h>
+#include <TFile.h>
+#include <TGeoVolume.h>
+#include <TGeoShape.h>
+#include <TGeoBBox.h>
+#include <TGeoManager.h>
+#include <TGeoNode.h>
+#include <iostream>
+
 // Refer to this example: https://root.cern.ch/doc/master/classTGeoManager.html
+int main(int argc, char **argv){
 
-int draw2(const char* drawOption="", const char* filename="emc_module12_2018v1.root"){
+	TFile* f = new TFile("./resources/emc_module12_2018v1.root", "READ");
+	while (f->IsZombie()) {
+		const char *filetypes[] = { "All files",     "*",
+		                            "ROOT files",    "*.root",
+		                            0,               0 };
+		TGFileInfo fi;
+		fi.fFileTypes = filetypes;
+		new TGFileDialog(gClient->GetRoot(), 0, kFDOpen, &fi);
 
-	TFile* f = new TFile(filename, "READ");
+		if (fi.fMultipleSelection){
+		    std::cout << "ERROR: multiple files not supported yet." << std::endl;
+		}
+		if (fi.fFilename){
+			f = new TFile(fi.fFilename, "READ");
+		}
+		if (f->IsZombie()){
+		    std::cout << "ERROR: corrupted file." << std::endl;
+		}
+	};
+
 	TGeoVolumeAssembly* assembly = (TGeoVolumeAssembly*)f->Get("BarrelEMC");
+	if (assembly == NULL){
+	    std::cout << "ERROR: cannot find \"BarrelEMC\" object." << std::endl;
+		return -1;
+	}
+	assembly->Dump();
 	assembly->Print();
 
 	// Get Assembly Boundsing Box size
@@ -11,7 +43,7 @@ int draw2(const char* drawOption="", const char* filename="emc_module12_2018v1.r
 	Double_t boxSize[3] = {0};
 	if (!shape->InheritsFrom(TGeoBBox::Class())){
 		std::cout << "ERROR: Cannot determine assembly box size." << std::endl;
-		return 1;
+		return -1;
 	}
 	TGeoBBox* box = (TGeoBBox*)shape;
 	boxSize[0] = box->GetDX();
@@ -26,11 +58,15 @@ int draw2(const char* drawOption="", const char* filename="emc_module12_2018v1.r
 	// Create top world volume
 	// TGeoVolume *topVolume = gGeoManager->MakeBox("topVolume", vacuumMedium, 0, 0, 0);
 	// TGeoVolume *topVolume = gGeoManager->MakeBox("topVolume", vacuumMedium, boxSize[0]*2, boxSize[1]*2, boxSize[2]*2);
-	TGeoVolume *topVolume = gGeoManager->MakeBox("topVolume", vacuumMedium, 500, 500, 500);
-	topVolume->AddNode(assembly, 1);
+	// TGeoVolume *topVolume = gGeoManager->MakeBox("topVolume", vacuumMedium, 500, 500, 500);
+	// topVolume->AddNode(assembly, 1);
 
-	gGeoManager->SetVisLevel(5);
-	gGeoManager->SetTopVolume(topVolume);
+	// Petr Stepanov: child GeoVolumes have NULL fGeoManager
+
+	gGeoManager = assembly->GetGeoManager();
+
+	// gGeoManager->SetVisLevel(5);
+	// gGeoManager->SetTopVolume(topVolume);
 	// gGeoManager->SetTopVolume(assembly);
 	gGeoManager->CloseGeometry();
 
@@ -42,10 +78,6 @@ int draw2(const char* drawOption="", const char* filename="emc_module12_2018v1.r
 		TGeoNode* node = assembly->GetNode(i);
 		node->Print();
 	}
-
-	// Print certain node
-	// for (int i = 0; i < nodesArray->GetEntries(); i++){
-	// }
 
 	// Print one node
 	// TGeoNode* node = assembly->GetNode(15);
@@ -77,4 +109,8 @@ int draw2(const char* drawOption="", const char* filename="emc_module12_2018v1.r
 	gGeoManager->Export("emc-panda.gdml", "topVolume");
 
 	return 0;
+}
+
+void setGeoManagerRecursively(TGeoVolume* volume){
+
 }

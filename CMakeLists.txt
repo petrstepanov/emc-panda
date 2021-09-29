@@ -29,7 +29,8 @@
   list(APPEND LIB_NAMES "ROOT::Html")
   list(APPEND LIB_NAMES "ROOT::Minuit")
   list(APPEND LIB_NAMES "ROOT::Fumili")
-
+  list(APPEND LIB_NAMES "ROOT::Geom")
+  
 # message(STATUS "Modified ROOT libraries:")
 # message(STATUS "${LIB_NAMES}")
 
@@ -76,3 +77,26 @@ install(FILES ${PROJECT_BINARY_DIR}/libD_${PROJECT_NAME}.rootmap
         DESTINATION $ENV{ROOTSYS}/lib)
 install(FILES ${PROJECT_BINARY_DIR}/libD_${PROJECT_NAME}_rdict.pcm
         DESTINATION /usr/local/bin)
+        
+#----------------------------------------------------------------------------
+# Phony: copy resources folder to the build directory
+
+function(copyFiles sourceFiles)
+  foreach(sourceFile ${sourceFiles})
+    # Replace source path with destination path
+    string(REGEX REPLACE "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}" destFile ${sourceFile})
+    # Copy file to build folder
+    configure_file(
+      ${sourceFile} ${destFile}
+      COPYONLY
+    )
+  endforeach()
+endfunction() 
+
+# Copy all scripts to the build directory, i.e. the directory in which we
+# build glass. This is so that we can run the executable directly because it
+# relies on these scripts being in the current working directory.
+
+file(GLOB_RECURSE panda_RESOURCES ${PROJECT_SOURCE_DIR}/resources/*)
+message(STATUS "Found list of resources: ${panda_RESOURCES}")
+copyFiles("${panda_RESOURCES}")
